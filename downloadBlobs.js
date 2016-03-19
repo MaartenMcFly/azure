@@ -30,30 +30,33 @@ function aggregateBlobs(err, result, stream, cb) {
 			});
 		} else {
 			console.log("Total: " + blobs.length);
+			var p = new Date();
+			p.setDate(p.getDate()-7);
 
-			async.forEachLimit(blobs, 2, function(blob, callback) {
-				blobSvc.getBlobToText(storageContainer, blob.name, function(err, blobContent, blob) {
-				var t;
-        			try {
-                			t = JSON.parse(blobContent);
-        			} catch (e) {
-                			console.error("Parse failed: " + e);
-        			}
-        			if (t) {
-					var d = new Date(Date.parse(t.availability[0].testTimestamp));
-					
-                			//console.log(t.availability[0].testName);
-                			stream.write(t.availability[0].testName + ',' + Date.parse(t.availability[0].testTimestamp) + ',' + t.availability[0].durationMetric.value + "\n");
-        			}
-        			t = null;
-			});
-			async.setImmediate(function() {
-				callback(null);
-			});}, function(err) {
-				if (err) return next(err)});
+			async.forEachLimit(blobs, 200, function(blob, callback) {				
+				if ((new Date(blob.properties["last-modified"])) > p) {
+					blobSvc.getBlobToText(storageContainer, blob.name, function(err, blobContent, blob) {
+						var t;
+        					try {
+                					t = JSON.parse(blobContent);
+        					} catch (e) {
+                					console.error("Parse failed: " + e);
+        					}	
+        					if (t) {
+                					stream.write(t.availability[0].testName + ',' + Date.parse(t.availability[0].testTimestamp) + ',' + t.availability[0].durationMetric.value + ',' + t.availability[0].testTimestamp + "\n");
+        					}	
+        					t = null;
+					});
+				};
+				async.setImmediate(function() {
+					callback(null);
+				});}, function(err) {
+					if (err) return next(err);
+				});
+			}
 		} 
 	}
-}
+
 
 blobSvc.listBlobsSegmented(storageContainer, null, function(err, result){
 	var stream = fs.createWriteStream(filename);
