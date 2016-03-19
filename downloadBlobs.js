@@ -43,7 +43,7 @@ function aggregateBlobs(err, result, stream, cb) {
                 					console.error("Parse failed: " + e);
         					}	
         					if (t) {
-                					stream.write(t.availability[0].testName + ',' + Date.parse(t.availability[0].testTimestamp) + ',' + t.availability[0].durationMetric.value + ',' + t.availability[0].testTimestamp + "\n");
+                					stream.write(t.availability[0].testName + ',' + Date.parse(t.availability[0].testTimestamp) + ',' + t.availability[0].durationMetric.value / 10000000+ ',' + t.availability[0].testTimestamp + "\n");
         					}	
         					t = null;
 					});
